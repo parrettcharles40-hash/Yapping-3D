@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>yapping 3D — ABDUL HANNAN</title>
+<meta name="color-scheme" content="dark light" />
+<meta name="description" content="yapping 3D — ABDUL HANNAN builds fast, modern, interactive 3D websites." />
+<style>
+  :root{
+    --bg:#0b0c10; --panel:#0f1118; --text:#eaf0ff; --muted:#9aa3b2;
+    --brand:#7c5cff; --accent:#22d3ee; --border:#232635; --shadow:0 10px 30px rgba(0,0,0,.35)
+  }
+  :root.light{ --bg:#f7f7fb; --panel:#fff; --text:#0f1222; --muted:#5e667a; --border:#e6e7ee; --shadow:0 14px 28px rgba(14,18,30,.08) }
+
+  *{box-sizing:border-box} html,body{height:100%}
+  /* ---------- Custom Pixel Arrow Cursor (black) ---------- */
+  :root{ --cursor: url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' shape-rendering='crispEdges'>\
+    <path d='M1 1 L1 14 L4 11 L7 17 L9 16 L6 10 L11 10 Z' fill='black'/></svg>") 1 1, auto; }
+  body{ cursor: var(--cursor); }
+  a,button,input,textarea,select{ cursor: var(--cursor); }
+
+  body{
+    margin:0;background:radial-gradient(1200px 600px at 80% -20%, rgba(124,92,255,.18), transparent 60%), var(--bg);
+    color:var(--text);font:500 16px/1.5 ui-sans-serif,system-ui,Segoe UI,Inter,Arial;-webkit-font-smoothing:antialiased
+  }
+  a{color:inherit;text-decoration:none}
+
+  header{
+    position:fixed;inset:0 0 auto 0;z-index:10;backdrop-filter:blur(10px) saturate(1.1);
+    background: color-mix(in oklab, var(--bg), #000 6%); border-bottom:1px solid var(--border)
+  }
+  .wrap{max-width:1200px;margin:auto;padding:14px 20px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.3px}
+  .logo-square{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--brand),var(--accent))}
+  .nav{display:flex;gap:12px;align-items:center}
+  .btn{display:inline-flex;gap:.6rem;align-items:center;padding:.65rem .95rem;border-radius:999px;border:1px solid var(--border);background:var(--panel)}
+  .btn--primary{border:none;background:linear-gradient(135deg,var(--brand),color-mix(in oklab,var(--brand),#fff 14%)); color:#fff; box-shadow:var(--shadow)}
+  .btn:active{transform:translateY(1px)}
+  .theme{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+  .theme button{all:unset;cursor:var(--cursor);padding:.45rem .6rem}
+  .theme button:hover{background:color-mix(in oklab,var(--panel),#fff 10%)}
+
+  /* looping play emoji */
+  .play-loop{position:relative; overflow:hidden; width:48px; height:24px}
+  .play-loop span{position:absolute; left:-24px; top:0; display:block; width:max-content; animation:playrun 2.4s linear infinite}
+  @keyframes playrun{ 0%{transform:translateX(0)} 100%{transform:translateX(72px)} }
+
+  #stage{position:fixed; inset:0; z-index:0; background:var(--bg)}
+  canvas{display:block;width:100%;height:100%}
+
+  .hero{position:relative;z-index:5;min-height:100svh;display:grid;place-items:center;text-align:center;padding:100px 16px 40px}
+  .h-title{font-size:clamp(34px, 6vw, 64px); line-height:1.05; letter-spacing:-.02em; margin:0 0 10px; font-weight:900}
+  .h-sub{max-width:80ch;margin:0 auto 16px;color:var(--muted);font-size:clamp(16px,1.5vw,20px)}
+  .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .chip{padding:.4rem .7rem;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+  .hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:.95rem}
+  .hint kbd{padding:.15rem .35rem;border:1px solid var(--border);border-radius:6px;background:var(--panel);margin:0 .15rem}
+
+  /* floating words cloud */
+  .float-cloud{position:absolute; inset:0; pointer-events:none; z-index:4}
+  .float-cloud .w{
+    position:absolute; color:color-mix(in oklab, var(--text), #fff 10%);
+    font-weight:800; opacity:.14; white-space:nowrap; text-transform:uppercase;
+    animation: floatWord linear infinite;
+  }
+  @keyframes floatWord{
+    0%{ transform: translate(var(--sx,0), 110vh) rotate(-2deg); }
+    100%{ transform: translate(calc(var(--sx,0) + 20px), -20vh) rotate(2deg); }
+  }
+
+  section{position:relative;z-index:5;padding:80px 16px;background:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, color-mix(in oklab,var(--bg),#000 6%) 40%, color-mix(in oklab,var(--bg),#000 8%) 100%)}
+  .container{max-width:1100px;margin:auto}
+  h2{font-size:clamp(24px,3vw,36px);margin:0 0 10px}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+
+  footer{position:relative;z-index:5;border-top:1px solid var(--border);padding:24px 16px;background:color-mix(in oklab,var(--bg),#000 5%)}
+  .muted{color:var(--muted)}
+
+  .toast{position:fixed;right:12px;bottom:12px;z-index:20;background:var(--panel);border:1px solid var(--border);
+         color:var(--text);padding:.6rem .75rem;border-radius:10px;box-shadow:var(--shadow);display:none}
+  .toast.show{display:block}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <div class="logo-square" aria-hidden="true"></div>
+      yapping <span style="color:var(--accent)">3D</span>
+      <div class="play-loop" aria-hidden="true"><span>▶️</span></div>
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a class="btn" href="#features">Features</a>
+      <a class="btn" href="#contact">Contact</a>
+      <a class="btn" href="mailto:diransoulian@outlook.com">Email</a>
+      <div class="theme" role="group" aria-label="Theme">
+        <button id="lightBtn" aria-pressed="false">🌞</button>
+        <button id="darkBtn"  aria-pressed="true">🌙</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div id="stage" aria-hidden="true"></div>
+
+<!-- floating attraction words -->
+<div class="float-cloud" aria-hidden="true">
+  <!-- tweak left/top and duration for variety -->
+  <span class="w" style="left:6%;  font-size:28px; --sx:-20px; animation-duration:18s;">WE BUILD WEBSITES • MODERN • FAST</span>
+  <span class="w" style="left:22%; font-size:34px; --sx:10px; animation-duration:22s; animation-delay:-5s;">RESPONSIVE • 3D • INTERACTIVE</span>
+  <span class="w" style="left:42%; font-size:26px; --sx:-35px; animation-duration:20s; animation-delay:-2s;">E‑COMMERCE • PORTFOLIOS • LANDING PAGES</span>
+  <span class="w" style="left:66%; font-size:32px; --sx:0px;  animation-duration:24s; animation-delay:-8s;">LIGHTNING PERFORMANCE • SEO READY</span>
+  <span class="w" style="left:78%; font-size:24px; --sx:15px; animation-duration:19s; animation-delay:-11s;">CLEAN CODE • PIXEL PERFECT</span>
+</div>
+
+<main>
+  <section class="hero" id="home">
+    <div>
+      <h1 class="h-title">Build fast with <span style="background:linear-gradient(90deg,var(--brand),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent">yapping 3D</span></h1>
+      <p class="h-sub">
+        Hi, I’m <b>ABDUL HANNAN</b>. I craft high‑performance, interactive 3D websites that hook customers.
+        Drag to orbit, scroll for parallax, click to switch shapes. Questions? <a href="mailto:diransoulian@outlook.com">diransoulian@outlook.com</a>
+      </p>
+      <div class="controls">
+        <button class="btn btn--primary" data-shape="sphere">Sphere</button>
+        <button class="btn btn--primary" data-shape="torus">Torus</button>
+        <button class="btn btn--primary" data-shape="cube">Cube</button>
+        <button class="btn" id="pauseBtn" aria-pressed="false">Pause</button>
+      </div>
+      <div class="chips">
+        <span class="chip">WebGL / Three.js</span>
+        <span class="chip">No models needed</span>
+        <span class="chip">Mobile ready</span>
+      </div>
+      <div class="hint">Tip: drag with mouse / touch • <kbd>S</kbd> switch shape • <kbd>P</kbd> pause</div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <h2>Features</h2>
+      <div class="grid">
+        <article>
+          <h3>Interactive object</h3>
+          <p class="muted">Glossy, physically‑based material with live color cycling and soft highlights.</p>
+        </article>
+        <article>
+          <h3>Starfield</h3>
+          <p class="muted">Procedural point cloud (8k stars) with depth‑fade and scroll parallax.</p>
+        </article>
+        <article>
+          <h3>Performance minded</h3>
+          <p class="muted">DPR capped, sleeps on hidden tab, rAF clock, and graceful fallbacks.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <h2>Contact</h2>
+      <p class="muted">Want this skinned to your brand or embedded into your site? Email me or use the form.</p>
+      <p><b>Email:</b> <a href="mailto:diransoulian@outlook.com">diransoulian@outlook.com</a></p>
+      <form id="contactForm" style="display:grid;gap:10px;max-width:520px">
+        <input required name="name" placeholder="Your name" />
+        <input required type="email" name="email" placeholder="you@example.com" />
+        <textarea required name="msg" rows="5" placeholder="What are we building?"></textarea>
+        <button class="btn btn--primary">Send</button>
+        <div id="formStatus" class="muted" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container muted">© <span id="year"></span> yapping 3D · ABDUL HANNAN. All rights reserved.</div>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Three.js (ESM via CDN). Requires internet. -->
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+  // ---------- Theme toggle ----------
+  const root = document.documentElement;
+  const setTheme = m => {
+    if(m==='light'){ root.classList.add('light'); localStorage.setItem('theme','light'); }
+    else { root.classList.remove('light'); localStorage.setItem('theme','dark'); }
+    lightBtn.setAttribute('aria-pressed', m==='light'); darkBtn.setAttribute('aria-pressed', m!=='light');
+  };
+  const lightBtn = document.getElementById('lightBtn');
+  const darkBtn  = document.getElementById('darkBtn');
+  setTheme(localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'));
+  lightBtn.addEventListener('click',()=>setTheme('light')); darkBtn.addEventListener('click',()=>setTheme('dark'));
+
+  // ---------- Toast helper ----------
+  const toast = (msg)=>{ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3500); };
+
+  // ---------- Renderer / Scene ----------
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 120);
+  camera.position.set(0, 0.8, 6);
+
+  // Lights
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x101020, 0.7);
+  scene.add(hemi);
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(5,6,5);
+  scene.add(key);
+
+  // ---------- Main object (procedural) ----------
+  const mat = new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color('hsl(265,82%,60%)'),
+    emissive: 0x111122,
+    metalness: 0.8,
+    roughness: 0.25,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.2,
+    envMapIntensity: 0.8
+  });
+
+  const group = new THREE.Group(); scene.add(group);
+  const geos = {
+    sphere: new THREE.SphereGeometry(1.4, 64, 64),
+    torus: new THREE.TorusKnotGeometry(1, 0.35, 200, 16),
+    cube: new THREE.BoxGeometry(2.1, 2.1, 2.1, 6, 6, 6)
+  };
+
+  const mesh = new THREE.Mesh(geos.torus, mat); // default torus
+  group.add(mesh);
+
+  // ---------- Starfield ----------
+  const starCount = 8000;
+  const starGeo = new THREE.BufferGeometry();
+  const pos = new Float32Array(starCount*3);
+  for(let i=0;i<starCount;i++){
+    const r = THREE.MathUtils.randFloat(20, 60);
+    const t = Math.random()*Math.PI*2;
+    const p = Math.acos(THREE.MathUtils.randFloatSpread(2)); // 0..pi
+    pos[i*3]   = r*Math.sin(p)*Math.cos(t);
+    pos[i*3+1] = r*Math.cos(p)*0.6; // squash Y for band feel
+    pos[i*3+2] = r*Math.sin(p)*Math.sin(t);
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const starMat = new THREE.PointsMaterial({size:0.05, color:0xffffff, transparent:true, opacity:0.85, depthWrite:false});
+  const stars = new THREE.Points(starGeo, starMat); scene.add(stars);
+
+  // ---------- Interaction (drag rotate) ----------
+  let isDown=false, lx=0, ly=0, rotX=0, rotY=0;
+  const pt = e => ('touches' in e) ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:e.clientX,y:e.clientY};
+  const onDown = e=>{ isDown=true; const p=pt(e); lx=p.x; ly=p.y; };
+  const onUp   = ()=>{ isDown=false; };
+  const onMove = e=>{
+    if(!isDown) return;
+    const p=pt(e);
+    rotY += (p.x - lx) * 0.003;
+    rotX += (p.y - ly) * 0.003;
+    rotX = Math.max(-1.2, Math.min(1.2, rotX));
+    lx=p.x; ly=p.y;
+  };
+  renderer.domElement.addEventListener('mousedown', onDown);
+  addEventListener('mouseup', onUp);
+  addEventListener('mouseleave', onUp);
+  renderer.domElement.addEventListener('mousemove', onMove);
+  renderer.domElement.addEventListener('touchstart', onDown, {passive:true});
+  addEventListener('touchend', onUp, {passive:true});
+  renderer.domElement.addEventListener('touchmove', onMove, {passive:true});
+
+  // Scroll parallax
+  let scrollY = 0;
+  addEventListener('scroll', ()=>{
+    scrollY = (document.documentElement.scrollTop || document.body.scrollTop)/innerHeight;
+  }, {passive:true});
+
+  // ---------- Shape switching ----------
+  const buttons = document.querySelectorAll('[data-shape]');
+  let targetShape = 'torus';
+  const switchShape = (name)=>{
+    if(!geos[name] || name===targetShape) return;
+    targetShape = name;
+    // soft fade + swap
+    const start = performance.now(), dur=280;
+    const startOpacity = mat.opacity || 1;
+    mat.transparent = true;
+    const tick = (now)=>{
+      const t = Math.min(1, (now-start)/dur);
+      mat.opacity = THREE.MathUtils.lerp(startOpacity, 0.0, t);
+      if(t<1){ requestAnimationFrame(tick); }
+      else{
+        mesh.geometry.dispose();
+        mesh.geometry = geos[targetShape];
+        // fade back in
+        const s2 = performance.now();
+        const up = (n)=>{
+          const u = Math.min(1, (n-s2)/dur);
+          mat.opacity = THREE.MathUtils.lerp(0.0, 1.0, u);
+          if(u<1) requestAnimationFrame(up);
+          else mat.transparent = false;
+        };
+        requestAnimationFrame(up);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
+  buttons.forEach(b=>b.addEventListener('click', ()=>switchShape(b.dataset.shape)));
+
+  // Keyboard shortcuts
+  const shapes = ['sphere','torus','cube'];
+  addEventListener('keydown', (e)=>{
+    if(e.key.toLowerCase()==='s'){ switchShape(shapes[(shapes.indexOf(targetShape)+1)%shapes.length]); }
+    if(e.key.toLowerCase()==='p'){ togglePause(); }
+  });
+
+  // ---------- Animation loop ----------
+  let running = true;
+  const clock = new THREE.Clock();
+  const pauseBtn = document.getElementById('pauseBtn');
+  function togglePause(){
+    running = !running;
+    pauseBtn.setAttribute('aria-pressed', String(!running));
+    pauseBtn.textContent = running ? 'Pause' : 'Resume';
+    if(running) animate();
+  }
+  pauseBtn.addEventListener('click', togglePause);
+
+  function animate(){
+    if(!running) return;
+    const t = clock.getElapsedTime();
+    // color pulse
+    const hue = (t*12)%360;
+    mat.color.set(`hsl(${hue}, 82%, 62%)`);
+    // rotate from drag + idle motion
+    group.rotation.y += (rotY - group.rotation.y) * 0.15;
+    group.rotation.x += (rotX - group.rotation.x) * 0.15;
+    mesh.rotation.y += 0.003;
+    mesh.rotation.x += 0.0015;
+
+    // star drift & parallax
+    stars.rotation.y += 0.0006;
+    camera.position.z = 6 + Math.sin(t*0.6)*0.2 + scrollY*1.2;
+    camera.position.y = 0.8 - scrollY*0.6;
+    camera.lookAt(0,0,0);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // Sleep when hidden to save battery
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){ running=false; }
+    else{ if(!running){ running=true; animate(); } }
+  });
+
+  // Handle resize
+  addEventListener('resize', ()=>{
+    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  // Fallback notices
+  renderer.getContext || toast('WebGL not available. 3D effects disabled.');
+  setTimeout(()=>{ if(!renderer.info) toast('If nothing moves, check your connection (CDN).'); }, 1800);
+
+  // Footer year
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Fake contact send
+  document.getElementById('contactForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const s = document.getElementById('formStatus');
+    s.textContent = 'Sending…';
+    await new Promise(r=>setTimeout(r,700));
+    e.target.reset();
+    s.textContent = 'Thanks! I’ll reply from diransoulian@outlook.com ✔️';
+  });
+</script>
+
+</body>
+</html>
